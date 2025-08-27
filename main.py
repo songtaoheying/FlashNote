@@ -1,6 +1,6 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit, QPushButton, QVBoxLayout, QWidget, QSizeGrip, \
-    QHBoxLayout
+    QHBoxLayout, QMenu
 from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtGui import QColor, QPalette, QFont
 
@@ -197,6 +197,19 @@ class StickyNote(QMainWindow):
 
     def drag_release_event(self, event):
         self.old_pos = None
+
+    def contextMenuEvent(self, event):
+        """
+        处理右键点击事件，显示上下文菜单。
+        """
+        menu = QMenu(self)
+        close_action = menu.addAction("close")
+
+        # 将 "关闭" 选项与关闭窗口的方法连接起来
+        close_action.triggered.connect(self.close)
+
+        # 在鼠标点击的位置显示菜单
+        menu.exec_(event.globalPos())
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton and event.pos().y() > self.height() - 50:
