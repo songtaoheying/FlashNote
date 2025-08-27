@@ -1,71 +1,91 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QPlainTextEdit
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPlainTextEdit, QSizeGrip
+from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtGui import QColor, QPalette
 
 
-class NotepadWidget(QMainWindow):
+class DesktopNote(QWidget):
     def __init__(self):
         super().__init__()
+        self.set_window_properties()
+        self.init_ui()
 
-        # 1. 设置窗口属性
+    def set_window_properties(self):
+        # 设置窗口标志，实现类似桌面便签的效果
+        # Qt.Tool: 工具窗口，通常在主窗口上方，不会出现在任务栏
+        # Qt.WindowStaysOnBottomHint: 窗口置于底层
+        # 结合这两个标志，可以实现你想要的效果
         self.setWindowFlags(
-            Qt.Tool |  # 启用Qt.Tool标志，使其不显示在任务栏，并能被其他普通窗口覆盖
-            Qt.WindowStaysOnBottomHint |  # 关键标志：保持窗口在所有普通窗口下方
-            Qt.CustomizeWindowHint |  # 启用自定义窗口边框
-            Qt.WindowMinMaxButtonsHint |  # 启用最小化和最大化按钮
-            Qt.FramelessWindowHint  # 如果想完全自定义边框，可以启用此项，但会失去拖动功能
+            Qt.Tool |
+            Qt.WindowStaysOnBottomHint |
+            Qt.FramelessWindowHint
         )
-        # 我们可以通过Qt.Tool和Qt.WindowStaysOnBottomHint来实现类似桌面组件的效果。
-        # Qt.WindowStaysOnBottomHint 使得窗口保持在底部，而Qt.Tool则让它不出现在任务栏上。
+        self.setAttribute(Qt.WA_TranslucentBackground)  # 禁用默认背景，以便自定义
+        self.setMouseTracking(True)  # 启用鼠标跟踪
 
-        # 2. 窗口标题栏和大小
-        self.setWindowTitle("")  # 5. 标题栏无内容
-        self.setGeometry(100, 100, 400, 300)  # 初始位置和大小 (100,100,400,300)
-        self.setMinimumSize(200, 150)  # 限制最小尺寸
-
-        # 3. 窗口颜色和透明度
-        self.setAutoFillBackground(True)
+        # 设置窗口背景颜色
         palette = self.palette()
-        palette.setColor(QPalette.Window, QColor(255, 255, 255))  # 3. 窗口白色
+        palette.setColor(QPalette.Window, QColor(255, 255, 255))
         self.setPalette(palette)
+        self.setStyleSheet("background-color: white;")
 
-        # 4. 创建文本编辑区域
-        self.text_editor = QPlainTextEdit(self)
-        self.text_editor.setPlaceholderText("请输入文本")  # 默认展示文本
-        self.text_editor.setStyleSheet("background-color: white; border: none;")
-        self.setCentralWidget(self.text_editor)
+        # 设置窗口初始大小
+        self.setGeometry(100, 100, 300, 200)
 
-        # 6. 拖动窗口功能
-        # 通过重写鼠标事件来实现窗口的拖动
-        self.oldPos = None
+    def init_ui(self):
+        # 创建布局
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)  # 移除布局边距
+
+        # 自定义标题栏
+        self.title_bar = QWidget()
+        self.title_bar.setFixedHeight(25)
+        self.title_bar.setStyleSheet("background-color: #efebe0;")
+        self.title_bar.setMouseTracking(True)
+        layout.addWidget(self.title_bar)
+
+        # 创建文本编辑框
+        self.text_edit = QPlainTextEdit()
+        self.text_edit.setPlaceholderText("请输入文本")
+        layout.addWidget(self.text_edit)
+
+        # 添加右下角调整大小的把手
+        self.size_grip = QSizeGrip(self)
+        self.size_grip.setFixedSize(16, 16)
+        layout.addWidget(self.size_grip, 0, Qt.AlignRight | Qt.AlignBottom)
+
+        self.setLayout(layout)
+
+        # 记录鼠标位置，用于窗口拖动
+        self.old_pos = None
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            self.oldPos = event.globalPos()
-            event.accept()
+            self.old_pos = event.globalPos()
+            # 检查点击位置是否在标题栏
+            if self.title_bar.underMouse():
+                self.is_dragging = True
+            else:
+                self.is_dragging = False
 
     def mouseMoveEvent(self, event):
-        if self.oldPos is not None and event.buttons() == Qt.LeftButton:
-            delta = event.globalPos() - self.oldPos
+        if self.old_pos and self.is_dragging:
+            delta = event.globalPos() - self.old_pos
             self.move(self.pos() + delta)
-            self.oldPos = event.globalPos()
-            event.accept()
+            self.old_pos = event.globalPos()
 
     def mouseReleaseEvent(self, event):
-        self.oldPos = None
-        event.accept()
+        self.old_pos = None
+        self.is_dragging = False
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app = QApplication(sys.argv)
 
-    # 关键步骤：设置应用程序的属性
-    # Qt.AA_UseHighDpiPixmaps 可以在高分辨率屏幕上更好地显示
-    # QApplication.setDesktopSettingsAware(False) 可以在某些情况下防止窗口隐藏
-    app.setAttribute(Qt.AA_UseHighDpiPixmaps)
-    app.setDesktopSettingsAware(False)
+    # 确保应用程序在Windows上正常工作
+    if sys.platform == "win32":
+        app.setStyle("Fusion")
 
-    note = NotepadWidget()
+    note = DesktopNote()
     note.show()
     sys.exit(app.exec_())
