@@ -203,10 +203,10 @@ class StickyNote(QMainWindow):
         处理右键点击事件，显示上下文菜单。
         """
         menu = QMenu(self)
-        close_action = menu.addAction("close")
+        close_action = menu.addAction("close")  # 为了更好的用户体验，可以把close改为“关闭”
 
-        # 将 "关闭" 选项与关闭窗口的方法连接起来
-        close_action.triggered.connect(self.close)
+        # 关键修改：将 triggered 信号连接到 QApplication 的 quit 方法
+        close_action.triggered.connect(QApplication.instance().quit)
 
         # 在鼠标点击的位置显示菜单
         menu.exec_(event.globalPos())
@@ -226,8 +226,9 @@ class StickyNote(QMainWindow):
 
     def toggle_pin(self):
         self.is_pinned = not self.is_pinned
+
         if self.is_pinned:
-            self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+            # self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
             self.pin_button.setStyleSheet("""
                 QPushButton {
                     background-color: #d8d8d8; /* 置顶时的背景色 */
@@ -236,7 +237,7 @@ class StickyNote(QMainWindow):
                 }
             """)
         else:
-            self.setWindowFlags(self.windowFlags() & ~Qt.WindowStaysOnTopHint)
+            # self.setWindowFlags(self.windowFlags() & ~Qt.WindowStaysOnTopHint)
             self.pin_button.setStyleSheet("""
                 QPushButton {
                     background-color: white;
@@ -244,8 +245,28 @@ class StickyNote(QMainWindow):
                     border-radius: 10px;
                 }
             """)
-        self.show()
 
+        # self.show()
+        try:
+            import win32gui
+            import win32con
+            hwnd = int(self.winId())
+
+            if self.is_pinned:
+                win32gui.SetWindowPos(hwnd, win32con.HWND_TOPMOST, 0, 0, 0, 0,
+                                      win32con.SWP_NOMOVE | win32con.SWP_NOSIZE | win32con.SWP_NOACTIVATE)
+            else:
+                win32gui.SetWindowPos(hwnd, win32con.HWND_NOTOPMOST, 0, 0, 0, 0,
+                                      win32con.SWP_NOMOVE | win32con.SWP_NOSIZE | win32con.SWP_NOACTIVATE)
+        except ImportError:
+            # 如果无法导入win32模块，则使用原始方法
+            pos = self.pos()
+            if self.is_pinned:
+                self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+            else:
+                self.setWindowFlags(self.windowFlags() & ~Qt.WindowStaysOnTopHint)
+            self.move(pos)
+            self.show()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
