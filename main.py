@@ -40,6 +40,7 @@ class StickyNote(QMainWindow):
 
         # 文本编辑区域
         self.text_edit = QTextEdit()
+        self.setup_text_edit()  # 添加这行
         self.text_edit.setPlaceholderText("请输入文本")
         self.text_edit.setStyleSheet("""
             QTextEdit {
@@ -195,7 +196,7 @@ class StickyNote(QMainWindow):
             self.move(self.x() + delta.x(), self.y() + delta.y())
             self.old_pos = event.globalPos()
 
-    def drag_release_event(self, event):
+    def drag_release_event(self, _event):
         self.old_pos = None
 
     def contextMenuEvent(self, event):
@@ -224,11 +225,45 @@ class StickyNote(QMainWindow):
     def mouseReleaseEvent(self, event):
         self.old_pos = None
 
+    # 在 StickyNote 类中添加以下方法
+    def setup_text_edit(self):
+        """设置文本编辑器的自定义行为"""
+        # 保存原始的 wheelEvent 方法
+        original_wheel_event = self.text_edit.wheelEvent
+
+        def custom_wheel_event(event):
+            # 检查是否按下了 Ctrl 键
+            if event.modifiers() & Qt.ControlModifier:
+                # 根据滚轮方向调整字体大小
+                if event.angleDelta().y() > 0:
+                    self.increase_font_size()
+                else:
+                    self.decrease_font_size()
+                # 阻止事件继续传播
+                return
+            # 否则使用原始的滚轮事件处理
+            original_wheel_event(event)
+
+        # 替换 wheelEvent 处理函数
+        self.text_edit.wheelEvent = custom_wheel_event
+
+    def keyPressEvent(self, event):
+        # 检查是否按下了 Ctrl 键
+        if event.modifiers() & Qt.ControlModifier:
+            # 检查是否按下了 '+' 键
+            if event.key() in [Qt.Key_Plus, Qt.Key_Equal]:
+                self.increase_font_size()
+                return
+            # 检查是否按下了 '-' 键
+            elif event.key() == Qt.Key_Minus:
+                self.decrease_font_size()
+                return
+        # 调用父类的 keyPressEvent 处理其他按键
+        super().keyPressEvent(event)
     def toggle_pin(self):
         self.is_pinned = not self.is_pinned
 
         if self.is_pinned:
-            # self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
             self.pin_button.setStyleSheet("""
                 QPushButton {
                     background-color: #d8d8d8; /* 置顶时的背景色 */
@@ -237,7 +272,6 @@ class StickyNote(QMainWindow):
                 }
             """)
         else:
-            # self.setWindowFlags(self.windowFlags() & ~Qt.WindowStaysOnTopHint)
             self.pin_button.setStyleSheet("""
                 QPushButton {
                     background-color: white;
@@ -246,7 +280,6 @@ class StickyNote(QMainWindow):
                 }
             """)
 
-        # self.show()
         try:
             import win32gui
             import win32con
@@ -260,13 +293,16 @@ class StickyNote(QMainWindow):
                                       win32con.SWP_NOMOVE | win32con.SWP_NOSIZE | win32con.SWP_NOACTIVATE)
         except ImportError:
             # 如果无法导入win32模块，则使用原始方法
-            pos = self.pos()
             if self.is_pinned:
-                self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+                flags = self.windowFlags() | Qt.WindowStaysOnTopHint
             else:
-                self.setWindowFlags(self.windowFlags() & ~Qt.WindowStaysOnTopHint)
+                flags = self.windowFlags() & ~Qt.WindowStaysOnTopHint
+            self.setWindowFlags(flags)
+
+            pos = self.pos()
             self.move(pos)
             self.show()
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
