@@ -1,3 +1,4 @@
+import os
 import sys
 
 from PySide6.QtWidgets import QApplication, QMainWindow, QTextEdit, QPushButton, QVBoxLayout, QWidget, QSizeGrip, \
@@ -5,9 +6,22 @@ from PySide6.QtWidgets import QApplication, QMainWindow, QTextEdit, QPushButton,
 from PySide6.QtCore import Qt, QPoint, QSize, QEvent
 from PySide6.QtGui import  QFont, QIcon
 
-# 图标路径，确保该文件存在
-ICON_PATH_DEFAULT = "resources/setTop_default.svg"
-ICON_PATH_CHECKED = "resources/setTop_checked.svg"
+
+def resource_path(relative_path):
+    """获取资源文件的绝对路径"""
+    try:
+        # PyInstaller创建的临时文件夹
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+
+# 使用 resource_path 函数获取图标路径
+ICON_PATH_DEFAULT = resource_path("resources/setTop_default.svg")
+ICON_PATH_CHECKED = resource_path("resources/setTop_checked.svg")
+
 
 class StickyNote(QMainWindow):
     def __init__(self):
@@ -58,9 +72,14 @@ class StickyNote(QMainWindow):
         self.pin_button.setFixedSize(35, 35)
         self.pin_button.setToolTip("置顶/取消置顶便签(Ctrl+T)")
 
-        # 创建图标对象
-        pin_icon = QIcon(ICON_PATH_DEFAULT)
-        self.pin_button.setIcon(pin_icon)
+
+
+
+        # 创建图标对象，使用 resource_path 获取正确路径
+        pin_icon_default = QIcon(ICON_PATH_DEFAULT)
+        pin_icon_checked = QIcon(ICON_PATH_CHECKED)
+
+        self.pin_button.setIcon(pin_icon_default)
         self.pin_button.setIconSize(QSize(20, 20))
 
         # 使用样式表来控制图标和背景颜色
@@ -69,14 +88,14 @@ class StickyNote(QMainWindow):
             border: none;
             border-radius: 17px;
             background-color: transparent;
-            icon: url({ICON_PATH_DEFAULT});
+            
         }}
         QPushButton:hover {{
             background-color: #dcd4c7;
         }}
         QPushButton:checked {{
             background-color: #transparent;
-            icon: url({ICON_PATH_CHECKED});
+            
         }}
         QPushButton:checked:hover {{
             background-color: #dcd4c7;
@@ -280,6 +299,12 @@ class StickyNote(QMainWindow):
     def toggle_pin(self):
         self.is_pinned = not self.is_pinned
         self.pin_button.setChecked(self.is_pinned)  # 确保按钮状态与逻辑同步
+
+        # 动态切换图标
+        if self.is_pinned:
+            self.pin_button.setIcon(QIcon(ICON_PATH_CHECKED))
+        else:
+            self.pin_button.setIcon(QIcon(ICON_PATH_DEFAULT))
 
         # 尝试使用 win32 模块进行置顶，效果更稳定
         try:

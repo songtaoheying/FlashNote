@@ -3,6 +3,7 @@
     <qresource prefix="icons">
         <file alias="pin.svg">my_icon.svg</file>
         <!-- 你可以在这里添加更多的资源文件 -->
-         <file alias="setTop.svg">setTop.svg</file>
+         <file alias="setTop_checked.svg">setTop_checked.svg</file>
+        <file alias="setTop_default.svg">setTop_default.svg</file>
     </qresource>
 </RCC>
