@@ -2,7 +2,7 @@ import sys
 
 from PySide6.QtWidgets import QApplication, QMainWindow, QTextEdit, QPushButton, QVBoxLayout, QWidget, QSizeGrip, \
     QHBoxLayout, QMenu
-from PySide6.QtCore import Qt, QPoint, QSize
+from PySide6.QtCore import Qt, QPoint, QSize, QEvent
 from PySide6.QtGui import  QFont, QIcon
 
 # 图标路径，确保该文件存在
@@ -16,6 +16,7 @@ class StickyNote(QMainWindow):
         self.is_pinned = False
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Tool)
         self.setWindowTitle("桌面便签")
+
 
         # 调整窗口的整体样式，使用更柔和的颜色
         self.setStyleSheet("""
@@ -32,12 +33,6 @@ class StickyNote(QMainWindow):
 
         # 创建中央 Widget 和布局
         central_widget = QWidget()
-        # central_widget.setStyleSheet("""
-        #         QWidget {
-        #             border: 1px solid #d4cbb8;
-        #             border-radius: 8px;
-        #         }
-        #     """)
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
         main_layout.setContentsMargins(1, 1, 1, 1)
@@ -146,6 +141,22 @@ class StickyNote(QMainWindow):
         # 首次设置字体
         self.set_font_size()
 
+    def changeEvent(self, event):
+        """
+        监听窗口状态变化事件
+        """
+        # 只关注 ActivationChange 事件
+        if event.type() == QEvent.Type.ActivationChange:
+            # 检查窗口是否处于激活状态
+            if not self.isActiveWindow():
+                # print("失去焦点")
+                # 失去焦点时隐藏底栏
+                self.bottom_bar.hide()
+            else:
+                # print("获得焦点")
+                self.bottom_bar.show()
+
+        super().changeEvent(event)
     def set_text_edit(self):
         """创建并配置文本编辑区域"""
         # 文本编辑区域
@@ -236,20 +247,22 @@ class StickyNote(QMainWindow):
     def mouseReleaseEvent(self, event):
         self.old_pos = None
 
-    # 设置文本编辑器快捷键的自定义行为
-    def setup_text_edit(self):
-        original_wheel_event = self.text_edit.wheelEvent
-
-        def custom_wheel_event(event):
-            if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
-                if event.angleDelta().y() > 0:
-                    self.increase_font_size()
-                else:
-                    self.decrease_font_size()
-                return
-            original_wheel_event(event)
-
-        self.text_edit.wheelEvent = custom_wheel_event
+    # 在 keyPressEvent 方法之后添加以下代码
+    def wheelEvent(self, event):
+        """
+        处理鼠标滚轮事件，支持 Ctrl + 滚轮进行字体缩放
+        """
+        # 检查是否按下了 Ctrl 键
+        if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
+            # 根据滚轮方向调整字体大小
+            if event.angleDelta().y() > 0:
+                self.increase_font_size()
+            else:
+                self.decrease_font_size()
+            # 阻止事件继续传播
+            return
+        # 如果没有按下 Ctrl 键，则使用默认的滚轮行为
+        super().wheelEvent(event)
 
     def keyPressEvent(self, event):
         if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
