@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QApplication, QMainWindow, QTextEdit, QPushButton,
     QHBoxLayout, QMenu
 from PySide6.QtCore import Qt, QPoint, QSize, QEvent
 from PySide6.QtGui import QFont, QIcon, QPixmap
-
+from PySide6.QtWidgets import QColorDialog
 
 def resource_path(relative_path):
     """获取资源文件的绝对路径"""
@@ -293,6 +293,11 @@ class StickyNote(QMainWindow):
         """
         menu = QMenu(self)
 
+        # 添加背景颜色选项
+        background_menu = menu.addMenu("背景")
+        change_bg_action = background_menu.addAction("选择背景颜色")
+        change_bg_action.triggered.connect(self.change_background_color)
+
         close_action = menu.addAction("关闭窗口")
         close_action.triggered.connect(QApplication.instance().quit)
         menu.exec(event.globalPos())
@@ -314,6 +319,67 @@ class StickyNote(QMainWindow):
         plain_text = clipboard.text()
         if plain_text:
             self.text_edit.insertPlainText(plain_text)
+    def change_background_color(self):
+        """
+        打开颜色选择对话框并更改文本编辑区域的背景颜色
+        """
+        # 获取当前背景颜色作为默认颜色
+        current_color = self.text_edit.palette().base().color()
+
+        # 打开颜色选择对话框
+        color = QColorDialog.getColor(current_color, self, "选择背景颜色")
+
+        # 如果用户选择了颜色且不是取消操作
+        if color.isValid():
+            # 设置文本编辑区域的背景颜色
+            palette = self.text_edit.palette()
+            palette.setColor(self.text_edit.backgroundRole(), color)
+            self.text_edit.setPalette(palette)
+
+            # 更新样式表以确保颜色生效
+            self.text_edit.setStyleSheet(f"""
+                QTextEdit {{
+                    border: none;
+                    padding: 10px;
+                    background-color: {color.name()};  /* 使用选择的颜色 */
+                }}
+                
+                /* 垂直滚动条 */
+                QScrollBar:vertical {{
+                    border: none;
+                    background: #f0f0e0;
+                    width: 10px;
+                    margin: 0px;
+                }}
+                
+                /* 滚动条把手 */
+                QScrollBar::handle:vertical {{
+                    background: #c0c0b0;
+                    min-height: 20px;
+                    border-radius: 5px;
+                }}
+                
+                /* 鼠标悬停时把手的颜色 */
+                QScrollBar::handle:vertical:hover {{
+                    background: #a0a090;
+                }}
+                
+                /* 滚动条空白区域 */
+                QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{
+                    background: none;
+                }}
+                
+                /* 滚动条按钮（上下箭头） */
+                QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
+                    height: 0px;
+                }}
+                
+                /* 当hideScroll属性为true时隐藏滚动条 */
+                QTextEdit[hideScroll="true"] QScrollBar:vertical {{
+                    width: 0px;
+                    background: transparent;
+                }}
+            """)
 
     def copy_plain_text(self):
         """
