@@ -9,6 +9,8 @@
 
 - 大小可调: 窗口大小可随意控制，适应不同的场景需求。
 
+- 文本类型: 支持富文本粘贴,提取纯文本信息 
+
 - 自定义字体大小: 自由调整字体大小，满足你的个性化需求。
 
 - 简洁美观: 极简的UI设计，专注于记录，提供清爽的使用体验。
@@ -42,7 +44,8 @@ python main.py
 ```
 
 ## 预览
-<img width="1024" height="608" alt="new" src="https://github.com/user-attachments/assets/96542dba-b3c4-4e5d-84b2-0a34d3772b56" />
+<img width="1613" height="707" alt="Snipaste_2025-08-29_15-07-12" src="https://github.com/user-attachments/assets/667e1633-b4d1-4d9b-b12a-de48f5ae1308" />
+
 
 
 
