@@ -1,18 +1,19 @@
 import os
 import sys
 
+
 from PySide6.QtWidgets import QApplication, QMainWindow, QTextEdit, QPushButton, QVBoxLayout, QWidget, QSizeGrip, \
     QHBoxLayout, QMenu
 from PySide6.QtCore import Qt, QPoint, QSize, QEvent
-from PySide6.QtGui import  QFont, QIcon
+from PySide6.QtGui import QFont, QIcon, QPixmap
 
 
 def resource_path(relative_path):
     """获取资源文件的绝对路径"""
     try:
         # PyInstaller创建的临时文件夹
-        base_path = sys._MEIPASS
-    except Exception:
+        base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))# noqa
+    except AttributeError:
         base_path = os.path.abspath(".")
 
     return os.path.join(base_path, relative_path)
@@ -57,6 +58,10 @@ class StickyNote(QMainWindow):
         self.set_text_edit()
         main_layout.addWidget(self.text_edit)
 
+        # 连接文本编辑区域的上下文菜单信号
+        self.text_edit.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.text_edit.customContextMenuRequested.connect(self.extend_text_edit_context_menu)
+
         # 底部区域，用作拖动句柄和按钮区域
         self.bottom_bar = QWidget()
         self.bottom_bar.setFixedHeight(45)
@@ -76,9 +81,7 @@ class StickyNote(QMainWindow):
 
 
         # 创建图标对象，使用 resource_path 获取正确路径
-        pin_icon_default = QIcon(ICON_PATH_DEFAULT)
-        pin_icon_checked = QIcon(ICON_PATH_CHECKED)
-
+        pin_icon_default =QIcon(QPixmap(ICON_PATH_DEFAULT))
         self.pin_button.setIcon(pin_icon_default)
         self.pin_button.setIconSize(QSize(20, 20))
 
@@ -182,7 +185,7 @@ class StickyNote(QMainWindow):
         self.text_edit.setStyleSheet("""
             QTextEdit {
                 border: none;
-                padding: 15px;
+                padding: 5px;
                 background-color: white;  /* 文本区域的背景颜色与主窗口保持一致 */
             }
 
@@ -239,12 +242,42 @@ class StickyNote(QMainWindow):
         self.grip.move(self.width() - self.grip.width(), self.height() - self.grip.height())
         super().resizeEvent(event)
 
+    def extend_text_edit_context_menu(self, position):
+        """
+        扩展现有的文本编辑区域右键菜单，添加自定义选项
+        """
+        # 创建标准上下文菜单
+        menu = self.text_edit.createStandardContextMenu()
+
+        # 添加分隔符
+        menu.addSeparator()
+
+        # 添加自定义选项
+        paste_plain_action = menu.addAction("粘贴为纯文本")
+        paste_plain_action.setShortcut("Ctrl+Shift+V")
+        paste_plain_action.triggered.connect(self.paste_plain_text)
+
+        # 添加复制为纯文本选项
+        copy_plain_action = menu.addAction("复制为纯文本")
+        copy_plain_action.setShortcut("Ctrl+Shift+C")
+        copy_plain_action.triggered.connect(self.copy_plain_text)
+        # 检查是否有选中的文本，如果没有则禁用复制为纯文本选项
+        has_selection = self.text_edit.textCursor().hasSelection()
+        copy_plain_action.setEnabled(has_selection)
+
+        # 添加其他自定义选项（示例）
+        clear_action = menu.addAction("清空内容")
+        clear_action.triggered.connect(self.text_edit.clear)
+
+        # 显示菜单
+        menu.exec(self.text_edit.mapToGlobal(position))
     def contextMenuEvent(self, event):
         """
         处理右键点击事件，显示上下文菜单。
         """
         menu = QMenu(self)
-        close_action = menu.addAction("关闭")
+
+        close_action = menu.addAction("关闭窗口")
         close_action.triggered.connect(QApplication.instance().quit)
         menu.exec(event.globalPos())
 
@@ -257,6 +290,23 @@ class StickyNote(QMainWindow):
                 self.old_pos = None  # 在其他区域点击不记录位置
         super().mousePressEvent(event)
 
+    def paste_plain_text(self):
+        """
+        粘贴纯文本内容，去除格式
+        """
+        clipboard = QApplication.clipboard()
+        plain_text = clipboard.text()
+        if plain_text:
+            self.text_edit.insertPlainText(plain_text)
+
+    def copy_plain_text(self):
+        """
+        复制选中的纯文本内容，去除格式
+        """
+        clipboard = QApplication.clipboard()
+        plain_text = self.text_edit.textCursor().selectedText()
+        if plain_text:
+            clipboard.setText(plain_text)
     def mouseMoveEvent(self, event):
         if self.old_pos is not None and event.buttons() & Qt.MouseButton.LeftButton:
             delta = QPoint(event.globalPosition().toPoint() - self.old_pos)
@@ -294,6 +344,12 @@ class StickyNote(QMainWindow):
             elif event.key() == Qt.Key.Key_T:
                 self.toggle_pin()
                 return
+            elif event.modifiers() & Qt.KeyboardModifier.ShiftModifier and event.key() == Qt.Key.Key_V:
+                self.paste_plain_text()
+                return
+            elif event.modifiers() & Qt.KeyboardModifier.ShiftModifier and event.key() == Qt.Key.Key_C:
+                self.copy_plain_text()
+                return
         super().keyPressEvent(event)
 
     def toggle_pin(self):
@@ -302,9 +358,9 @@ class StickyNote(QMainWindow):
 
         # 动态切换图标
         if self.is_pinned:
-            self.pin_button.setIcon(QIcon(ICON_PATH_CHECKED))
+            self.pin_button.setIcon(QIcon(QPixmap(ICON_PATH_CHECKED)))
         else:
-            self.pin_button.setIcon(QIcon(ICON_PATH_DEFAULT))
+            self.pin_button.setIcon(QIcon(QPixmap(ICON_PATH_DEFAULT)))
 
         # 尝试使用 win32 模块进行置顶，效果更稳定
         try:
