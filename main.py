@@ -195,7 +195,7 @@ class StickyNote(QMainWindow):
         self.text_edit.setStyleSheet("""
             QTextEdit {
                 border: none;
-                padding: 5px;
+                padding: 10px;
                 background-color: white;  /* 文本区域的背景颜色与主窗口保持一致 */
             }
 

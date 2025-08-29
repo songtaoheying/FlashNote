@@ -28,7 +28,7 @@ VSVersionInfo(
       StringTable(
         u'040904B0',
         [StringStruct(u'CompanyName', u'X'),
-        StringStruct(u'FileDescription', u'如其名,闪记'),
+        StringStruct(u'FileDescription', u'FlushNote闪贴'),
         StringStruct(u'FileVersion', u'1.1.0.0'),
         StringStruct(u'InternalName', u'FlushNote'),
         StringStruct(u'LegalCopyright', u'Copyright © 2025 AshXiong'),
