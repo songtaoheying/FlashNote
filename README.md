@@ -44,7 +44,7 @@ python main.py
 ```
 
 ## 预览
-<img width="1613" height="707" alt="Snipaste_2025-08-29_15-07-12" src="https://github.com/user-attachments/assets/667e1633-b4d1-4d9b-b12a-de48f5ae1308" />
+<img width="2077" height="521" alt="image" src="https://github.com/user-attachments/assets/b2f3e910-8be7-4b06-8863-ee53f55cc064" />
 
 
 
