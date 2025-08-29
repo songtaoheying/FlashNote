@@ -174,11 +174,21 @@ class StickyNote(QMainWindow):
                 # print("失去焦点")
                 # 失去焦点时隐藏底栏
                 self.bottom_bar.hide()
+                self.hide_scrollbars(True)
             else:
                 # print("获得焦点")
                 self.bottom_bar.show()
+                self.hide_scrollbars(False)
 
         super().changeEvent(event)
+
+    def hide_scrollbars(self, hide):
+        """隐藏或显示滚动条"""
+        if hide:
+            self.text_edit.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        else:
+            self.text_edit.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+
     def set_text_edit(self):
         """创建并配置文本编辑区域"""
         # 文本编辑区域
@@ -218,6 +228,12 @@ class StickyNote(QMainWindow):
             QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
                 height: 0px;
             }
+            
+            /* 当hideScroll属性为true时隐藏滚动条 */
+            QTextEdit[hideScroll="true"] QScrollBar:vertical {
+                width: 0px;
+            background: transparent;
+        }
         """)
 
     def set_font_size(self):
