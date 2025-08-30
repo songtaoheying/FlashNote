@@ -11,7 +11,7 @@
 
 - 文本类型: 支持富文本粘贴,提取纯文本信息 
 
-- 自定义字体大小: 自由调整字体大小，满足你的个性化需求。
+- 界面调整: 自由调整字体、颜色，满足你的个性化需求。
 
 - 简洁美观: 极简的UI设计，专注于记录，提供清爽的使用体验。
 
@@ -45,9 +45,8 @@ python main.py
 ```
 
 ## 预览
-<img width="2077" height="521" alt="image" src="https://github.com/user-attachments/assets/b2f3e910-8be7-4b06-8863-ee53f55cc064" />
-
-
+![Sample](../../Desktop/Snipaste_2025-08-30_18-13-44.png)
+![Sample](../../Desktop/Snipaste_2025-08-30_18-15-58.png)
 
 
 
