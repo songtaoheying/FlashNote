@@ -45,8 +45,9 @@ python main.py
 ```
 
 ## 预览
-![Sample](../../Desktop/Snipaste_2025-08-30_18-13-44.png)
-![Sample](../../Desktop/Snipaste_2025-08-30_18-15-58.png)
+<img width="1419" height="475" alt="Sample" src="https://github.com/user-attachments/assets/03dbbc79-5ca1-4bc0-a054-84803ed19837" />
+<img width="1447" height="452" alt="Sample" src="https://github.com/user-attachments/assets/87d31205-4f8a-4a69-abcc-aa6231755750" />
+
 
 
 
