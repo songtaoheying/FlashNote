@@ -5,9 +5,9 @@ def resource_path(relative_path):
     """获取资源文件的绝对路径"""
     try:
         # PyInstaller创建的临时文件夹
-        base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))  # noqa
+        base_path = getattr(sys, '_MEIPASS', os.path.abspath(""))  # noqa
     except AttributeError:
-        base_path = os.path.abspath(".")
+        base_path = os.path.abspath("")
 
     return os.path.join(base_path, relative_path)
 

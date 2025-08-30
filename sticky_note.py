@@ -1,11 +1,15 @@
 # sticky_note.py
 from PySide6.QtGui import QFont, Qt
-from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QSizeGrip
+from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QSizeGrip, QApplication
 
 from event_handlers import WindowEventHandler, TextEditEventHandler
-from text_editor import CustomTextEdit, change_background_color, change_font_color, hide_scrollbars, change_font
+from text_editor import CustomTextEdit
 from ui_components import create_bottom_bar, toggle_pin
 
+
+
+# 定义全局边框颜色变量
+BORDER_COLOR = "#d4cbb8"
 
 class StickyNote(QMainWindow):
     def __init__(self):
@@ -17,10 +21,10 @@ class StickyNote(QMainWindow):
         # self.setWindowTitle("桌面便签")
 
         # 调整窗口的整体样式，使用更柔和的颜色
-        self.setStyleSheet("""
-            QMainWindow {
-                border: 1px solid #d4cbb8;   /* 柔和的边框 */
-            }
+        self.setStyleSheet(f"""
+            QMainWindow {{
+                border: 1px solid {BORDER_COLOR};   /* 边框颜色 */
+            }}
         """)
         # 初始尺寸
         self.resize(500, 400)
@@ -52,27 +56,28 @@ class StickyNote(QMainWindow):
         # 初始化事件处理器
         self.window_event_handler = WindowEventHandler(self)
         self.text_event_handler = TextEditEventHandler(self)
+        QApplication.instance().installEventFilter(self)
 
         # 首次设置字体
         font = QFont("Source Han Sans SC", max(8, self.current_font_size))
         self.text_edit.setFont(font)
 
+    # sticky_note.py
 
 
-
-
-    # 在 StickyNote 类中添加以下方法
     def toggle_pin(self):
         toggle_pin(self)
 
     def change_background_color(self):
-        change_background_color(self)
+        self.text_edit.change_background_color()
 
     def change_font_color(self):
-        change_font_color(self)
+        self.text_edit.change_font_color()
 
-    def hide_scrollbars(self, hide):
-        hide_scrollbars(self, hide)
+    def change_font(self):
+        self.text_edit.change_font_dialog()
+    def hide_scrollbars(self,hide):
+        self.text_edit.hide_scrollbars(hide)
 
     def mousePressEvent(self, event):
         self.window_event_handler.mouse_press_event(event)
@@ -114,5 +119,47 @@ class StickyNote(QMainWindow):
     def copy_plain_text(self):
         self.text_edit.copy_plain_text()
 
-    def change_font(self):
-        change_font(self)
+
+    def eventFilter(self, obj, event):
+        # 调用自定义的事件处理方法
+        return self.window_event_handler.event_filter(obj, event)
+
+    # 在 sticky_note.py 中
+    def create_new_note(self):
+        """
+        创建新的便签实例
+        """
+
+        # 创建新的便签窗口
+        new_note = create_window()
+        # 设置新便签的位置稍微偏移一些，避免完全重叠
+        new_pos = self.pos()
+        new_note.move(new_pos.x() + 30, new_pos.y() + 30)
+        new_note.show()
+    def close_and_update_count(self):
+        """关闭窗口并手动触发计数更新"""
+
+        # 先减少计数
+        on_window_destroyed()
+        # 再关闭窗口
+        self.close()
+
+# 全局窗口计数
+window_count = 0
+def on_window_destroyed():
+    """窗口销毁时调用"""
+    global window_count
+    # print("当前窗口数:", window_count)
+    window_count -= 1
+    # print("递减后窗口数:", window_count)
+    if window_count <= 0:
+        QApplication.quit()
+
+def create_window():
+    """创建新窗口并增加计数"""
+    global window_count
+    window = StickyNote()
+    # print("当前窗口数", window_count)
+    window_count += 1
+    # print("递增当前窗口数:", window_count)
+    return window

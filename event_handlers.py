@@ -1,12 +1,23 @@
 # event_handlers.py
 from PySide6.QtCore import Qt, QPoint, QEvent
-from PySide6.QtWidgets import QApplication, QMenu
+from PySide6.QtWidgets import QMenu
 
 
 class WindowEventHandler:
     def __init__(self, parent):
+        super().__init__()
         self.parent = parent
 
+    def event_filter(self,_obj,event):
+        """
+        监听系统主题变化事件
+        """
+        if event.type() == QEvent.Type.ApplicationPaletteChange:
+            # 当系统主题发生变化时，更新应用主题
+            if self.parent.text_edit.user_theme_preference is None:
+                self.parent.text_edit.set_system_theme_mode()
+            return True
+        return False
     def mouse_press_event(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
             # 只有在底部拖动栏区域点击时才允许拖动
@@ -73,10 +84,24 @@ class WindowEventHandler:
         """
         menu = QMenu(self.parent)
 
+
+
         # 添加背景颜色选项
         background_menu = menu.addMenu("背景")
         change_bg_action = background_menu.addAction("选择背景颜色")
         change_bg_action.triggered.connect(self.parent.change_background_color)
+
+        # 添加深色模式和浅色模式选项
+        dark_mode_action = background_menu.addAction("深色模式")
+        dark_mode_action.triggered.connect(self.parent.text_edit.set_dark_mode)
+
+        light_mode_action = background_menu.addAction("浅色模式")
+        light_mode_action.triggered.connect(self.parent.text_edit.set_light_mode)
+
+        # 在浅色模式选项后添加系统主题选项
+        system_theme_action = background_menu.addAction("跟随系统主题")
+        system_theme_action.triggered.connect(self.parent.text_edit.set_system_theme_mode)
+
 
         font_menu = menu.addMenu("字体")
         change_font_color_action = font_menu.addAction("选择字体颜色")
@@ -86,8 +111,12 @@ class WindowEventHandler:
         change_font_action = font_menu.addAction("选择字体")
         change_font_action.triggered.connect(self.parent.change_font)
 
+        # 添加新建便签选项
+        new_note_action = menu.addAction("新建便签")
+        new_note_action.triggered.connect(self.parent.create_new_note)
+
         close_action = menu.addAction("关闭窗口")
-        close_action.triggered.connect(QApplication.instance().quit)
+        close_action.triggered.connect(self.parent.close_and_update_count)
         menu.popup(event.globalPos())
 
     def change_event(self, event):
@@ -138,9 +167,13 @@ class TextEditEventHandler:
         has_selection = self.parent.text_edit.textCursor().hasSelection()
         copy_plain_action.setEnabled(has_selection)
 
-        # 添加其他自定义选项（示例）
+        # 添加转换为纯文本选项
+        convert_plain_action = menu.addAction("转换为纯文本(清除格式)")
+        convert_plain_action.triggered.connect(self.parent.text_edit.convert_to_plain_text)
+
+        # 添加清空内容与格式选项
         clear_action = menu.addAction("清空内容")
-        clear_action.triggered.connect(self.parent.text_edit.clear)
+        clear_action.triggered.connect(self.parent.text_edit.clear_all)
 
         # 显示菜单
         menu.exec(self.parent.text_edit.mapToGlobal(position))
