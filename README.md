@@ -20,7 +20,7 @@
 ### 依赖
 
   - Python 3.x
-  - PyQt5
+  - PySide6
 
 ### 安装
 
@@ -28,13 +28,14 @@
 
     ```bash
     git clone https://github.com/songtaoheying/FlashNote.git
-    cd 项目名
+    cd FlashNote
     ```
 
 2.  安装依赖：
 
     ```bash
-    pip install PyQt5
+    pip install pyside6 -i https://pypi.tuna.tsinghua.edu.cn/simple
+    #-i https://pypi.tuna.tsinghua.edu.cn/simple 为了加快pip安装速度
     ```
 
 ### 运行
